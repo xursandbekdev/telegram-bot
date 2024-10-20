@@ -3,17 +3,20 @@ const { Telegraf } = require("telegraf");
 const youtubedl = require("yt-dlp-exec");
 const express = require("express");
 
-const bot = new Telegraf(process.env.BOT_TOKEN); // Bot tokenni dotenv fayldan olish
+const bot = new Telegraf(process.env.BOT_TOKEN);
 
-// Express serverni yaratish va o'rnatish
+// Express serverni yaratish
 const app = express();
-app.get("/", (req, res) => res.send("Bot is running!"));
+app.use(express.json());
+
+// Webhookni sozlash
+app.post("/webhook", (req, res) => {
+    bot.handleUpdate(req.body, res);
+});
 
 // YouTube, Instagram yoki TikTok videolarini yuklab olish funktsiyasi
 bot.start((ctx) => {
-    ctx.reply(
-        "Salom! YouTube, Instagram yoki TikTok videosining linkini yuboring va men sizga video chiqaraman."
-    );
+    ctx.reply("Salom! YouTube, Instagram yoki TikTok videosining linkini yuboring va men sizga video chiqaraman.");
 });
 
 // Tekshirilgan linklar va video yuklash
@@ -52,16 +55,10 @@ bot.on("text", async (ctx) => {
     }
 });
 
-// Botni ishga tushirish
-bot.launch()
-    .then(() => {
-        console.log("Bot muvaffaqiyatli ishga tushdi...");
-    })
-    .catch((error) => {
-        console.error("Botni ishga tushirishda xatolik:", error);
-    });
+// Webhookni o'rnatish
+const URL = `https://api.telegram.org/bot${process.env.BOT_TOKEN}/setWebhook`;
+await fetch(`${URL}?url=${process.env.VERCEL_URL}/webhook`);
 
-// Serverni ishga tushirish
 app.listen(3000, () => {
     console.log("Server 3000-portda ishlayapti...");
 });
